@@ -1,12 +1,14 @@
 import pandas as pd
 import plotly.express as px
 import os
-import webbrowser # NOVA BIBLIOTECA PARA ABRIR O NAVEGADOR
+import webbrowser
 
 # --- CONFIGURAÇÕES ---
-# O nome do seu arquivo CSV, que deve estar na mesma pasta do script
 FILE_NAME = 'Comparativo - Americanense.xlsx - Americanense.csv'
 HTML_OUTPUT = 'comparativo_tributario.html'
+# O índice da linha que contém o cabeçalho "Simples Nacional Atual", "Valor_Imposto" etc.
+# Pelo seu arquivo, parece ser a linha 7, que é o índice 6.
+HEADER_ROW_INDEX = 6
 # --------------------
 
 def formatar_br(valor, tipo='moeda'):
@@ -14,50 +16,56 @@ def formatar_br(valor, tipo='moeda'):
     if pd.isna(valor):
         return ""
     if tipo == 'moeda':
-        # Formata como moeda (separador de milhar ponto, separador decimal vírgula)
         return f'R$ {valor:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
     elif tipo == 'porcentagem':
-        # Formata como porcentagem
         return f'{valor*100:.2f}%'.replace('.', ',')
     return str(valor)
 
 def generate_tax_dashboard():
     # 1. Carregamento e Preparação dos Dados
     try:
-        # A tabela de GRÁFICOS está na linha 6 (índice 5) do CSV, começando na coluna G (índice 6)
-        # O cabeçalho real da tabela que queremos usar é a linha 7 (índice 6)
+        # Pula as linhas até o cabeçalho principal
         df_raw = pd.read_csv(
             FILE_NAME, 
             sep=',', 
             encoding='utf-8', 
-            header=6, # Define a 7ª linha como cabeçalho
-            usecols=range(6, 10), # Seleciona colunas a partir do índice 6
+            header=HEADER_ROW_INDEX, 
             skipinitialspace=True
         )
+        
+        # Seleciona as colunas da tabela de GRÁFICOS (colunas G, H, I, J do Excel, que no CSV são sem nome)
+        # Assumindo que a tabela de comparação começa na coluna de índice 6 e vai até 9
+        df_comparativo = df_raw.iloc[0:4, 6:9].copy() 
+        df_comparativo.columns = ['Regime', 'Valor_Imposto', 'Aliquota_Efetiva']
+        
     except FileNotFoundError:
         print(f"ERRO: Arquivo '{FILE_NAME}' não encontrado.")
-        print("Certifique-se de que o arquivo CSV está na mesma pasta que o script Python.")
         return
     except Exception as e:
-        print(f"Erro ao ler o arquivo CSV: {e}")
+        print(f"Erro ao processar o CSV. Verifique se o índice de coluna está correto. Erro: {e}")
         return
 
-    # Renomear as colunas para facilitar
-    df_comparativo = df_raw.iloc[0:4].copy()
-    df_comparativo.columns = ['Regime', 'Valor_Imposto', 'Aliquota_Efetiva', 'Desconhecida']
-    
     # Limpeza e conversão de dados
     df_comparativo['Valor_Imposto'] = pd.to_numeric(df_comparativo['Valor_Imposto'], errors='coerce')
     df_comparativo['Aliquota_Efetiva'] = pd.to_numeric(df_comparativo['Aliquota_Efetiva'], errors='coerce')
     df_comparativo = df_comparativo.dropna(subset=['Valor_Imposto'])
     
-    # Adicionar coluna para a cor dos gráficos (destaque no menor valor)
+    # Confirmação de Leitura antes de plotar
+    if df_comparativo.empty or df_comparativo['Valor_Imposto'].sum() == 0:
+        print("\n=======================================================")
+        print("⚠️ DADOS NÃO LIDOS CORRETAMENTE!")
+        print(f"O arquivo {FILE_NAME} é muito complexo.")
+        print("Tente alterar a variável 'HEADER_ROW_INDEX' no código.")
+        print(f"Primeiras linhas lidas para debug:\n{df_raw.head(8)}")
+        print("=======================================================")
+        return
+        
+    # Restante da lógica (Criação dos Gráficos)
     menor_imposto = df_comparativo['Valor_Imposto'].min()
     df_comparativo['Destaque'] = df_comparativo['Valor_Imposto'].apply(lambda x: 'Menor Imposto' if x == menor_imposto else 'Outros Regimes')
 
-
-    # 2. Criação dos Gráficos Interativos (Plotly)
-
+    # ... (Criação dos gráficos fig_valor e fig_aliquota é a mesma)
+    
     # Gráfico 1: Comparativo do Valor Total de Impostos
     fig_valor = px.bar(
         df_comparativo,
@@ -87,7 +95,7 @@ def generate_tax_dashboard():
     fig_aliquota.update_layout(yaxis_title="Alíquota Efetiva", xaxis_title=None, yaxis_tickformat=".2%", showlegend=False)
 
 
-    # 3. Geração do Arquivo HTML Final (com CSS para layout)
+    # Geração do HTML (Conteúdo omitido para brevidade, é o mesmo)
 
     html_content = f"""
 <!DOCTYPE html>
@@ -132,18 +140,14 @@ def generate_tax_dashboard():
     with open(HTML_OUTPUT, 'w', encoding='utf-8') as f:
         f.write(html_content)
         
-    # 4. Abrir o arquivo no navegador (A correção!)
+    # Abrir o arquivo no navegador
     try:
         abs_path = os.path.abspath(HTML_OUTPUT)
         webbrowser.open('file://' + abs_path, new=2)
     except Exception:
-        # Instrução de fallback se a abertura falhar
-        print(f"Não foi possível abrir o navegador automaticamente.") 
+        pass 
 
-    print(f"\n===================================================================================")
-    print(f"✅ Dashboard '{HTML_OUTPUT}' gerado com sucesso!")
-    print(f"Se a aba não abriu, procure o arquivo '{HTML_OUTPUT}' na mesma pasta e abra-o manualmente.")
-    print(f"===================================================================================\n")
+    print(f"\n✅ Dashboard '{HTML_OUTPUT}' gerado com sucesso! (Abra o arquivo manualmente se necessário)")
 
 
 if __name__ == "__main__":
