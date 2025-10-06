@@ -1,0 +1,150 @@
+import pandas as pd
+import plotly.express as px
+import os
+import webbrowser # NOVA BIBLIOTECA PARA ABRIR O NAVEGADOR
+
+# --- CONFIGURAÇÕES ---
+# O nome do seu arquivo CSV, que deve estar na mesma pasta do script
+FILE_NAME = 'Comparativo - Americanense.xlsx - Americanense.csv'
+HTML_OUTPUT = 'comparativo_tributario.html'
+# --------------------
+
+def formatar_br(valor, tipo='moeda'):
+    """Formata números para o padrão brasileiro (R$ e %)"""
+    if pd.isna(valor):
+        return ""
+    if tipo == 'moeda':
+        # Formata como moeda (separador de milhar ponto, separador decimal vírgula)
+        return f'R$ {valor:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+    elif tipo == 'porcentagem':
+        # Formata como porcentagem
+        return f'{valor*100:.2f}%'.replace('.', ',')
+    return str(valor)
+
+def generate_tax_dashboard():
+    # 1. Carregamento e Preparação dos Dados
+    try:
+        # A tabela de GRÁFICOS está na linha 6 (índice 5) do CSV, começando na coluna G (índice 6)
+        # O cabeçalho real da tabela que queremos usar é a linha 7 (índice 6)
+        df_raw = pd.read_csv(
+            FILE_NAME, 
+            sep=',', 
+            encoding='utf-8', 
+            header=6, # Define a 7ª linha como cabeçalho
+            usecols=range(6, 10), # Seleciona colunas a partir do índice 6
+            skipinitialspace=True
+        )
+    except FileNotFoundError:
+        print(f"ERRO: Arquivo '{FILE_NAME}' não encontrado.")
+        print("Certifique-se de que o arquivo CSV está na mesma pasta que o script Python.")
+        return
+    except Exception as e:
+        print(f"Erro ao ler o arquivo CSV: {e}")
+        return
+
+    # Renomear as colunas para facilitar
+    df_comparativo = df_raw.iloc[0:4].copy()
+    df_comparativo.columns = ['Regime', 'Valor_Imposto', 'Aliquota_Efetiva', 'Desconhecida']
+    
+    # Limpeza e conversão de dados
+    df_comparativo['Valor_Imposto'] = pd.to_numeric(df_comparativo['Valor_Imposto'], errors='coerce')
+    df_comparativo['Aliquota_Efetiva'] = pd.to_numeric(df_comparativo['Aliquota_Efetiva'], errors='coerce')
+    df_comparativo = df_comparativo.dropna(subset=['Valor_Imposto'])
+    
+    # Adicionar coluna para a cor dos gráficos (destaque no menor valor)
+    menor_imposto = df_comparativo['Valor_Imposto'].min()
+    df_comparativo['Destaque'] = df_comparativo['Valor_Imposto'].apply(lambda x: 'Menor Imposto' if x == menor_imposto else 'Outros Regimes')
+
+
+    # 2. Criação dos Gráficos Interativos (Plotly)
+
+    # Gráfico 1: Comparativo do Valor Total de Impostos
+    fig_valor = px.bar(
+        df_comparativo,
+        x='Regime',
+        y='Valor_Imposto',
+        color='Destaque',
+        color_discrete_map={'Menor Imposto': '#28a745', 'Outros Regimes': '#007bff'},
+        title='Comparativo do Valor Total de Impostos (R$)',
+        text=df_comparativo['Valor_Imposto'].apply(lambda x: formatar_br(x, 'moeda')),
+        template='plotly_white'
+    )
+    fig_valor.update_traces(textposition='outside')
+    fig_valor.update_layout(yaxis_title="Valor do Imposto (R$)", xaxis_title=None, showlegend=False)
+
+    # Gráfico 2: Comparativo da Alíquota Efetiva
+    fig_aliquota = px.bar(
+        df_comparativo,
+        x='Regime',
+        y='Aliquota_Efetiva',
+        color='Destaque',
+        color_discrete_map={'Menor Imposto': '#28a745', 'Outros Regimes': '#007bff'},
+        title='Comparativo da Alíquota Efetiva (%)',
+        text=df_comparativo['Aliquota_Efetiva'].apply(lambda x: formatar_br(x, 'porcentagem')),
+        template='plotly_white'
+    )
+    fig_aliquota.update_traces(textposition='outside')
+    fig_aliquota.update_layout(yaxis_title="Alíquota Efetiva", xaxis_title=None, yaxis_tickformat=".2%", showlegend=False)
+
+
+    # 3. Geração do Arquivo HTML Final (com CSS para layout)
+
+    html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Comparativo Tributário - Americanense</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {{ font-family: 'Arial', sans-serif; margin: 0; background-color: #f0f2f5; }}
+        .header {{ background-color: #007bff; color: white; padding: 25px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
+        h1 {{ margin: 0; font-size: 2.2em; }}
+        .container {{ display: flex; flex-wrap: wrap; justify-content: space-around; padding: 20px; max-width: 1300px; margin: 30px auto; }}
+        .card {{ background-color: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 15px; padding: 20px; flex: 1 1 45%; min-width: 450px; }}
+        h2 {{ color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }}
+        p.intro {{ text-align: center; color: #ccf; font-size: 1.1em; margin-top: 10px; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Análise Comparativa de Regimes Tributários</h1>
+        <p class="intro">Dados do arquivo {os.path.basename(FILE_NAME)}</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>💰 Valor Absoluto do Imposto (R$)</h2>
+            <p>O custo total em Reais para cada Regime de Tributação simulado. (Clique para interagir)</p>
+            {fig_valor.to_html(full_html=False, include_plotlyjs='cdn')}
+        </div>
+        <div class="card">
+            <h2>📈 Alíquota Efetiva (%)</h2>
+            <p>A porcentagem real que a empresa paga em impostos sobre a Receita. (Clique para interagir)</p>
+            {fig_aliquota.to_html(full_html=False, include_plotlyjs='cdn')}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+    # Salvar o conteúdo em um arquivo HTML
+    with open(HTML_OUTPUT, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+        
+    # 4. Abrir o arquivo no navegador (A correção!)
+    try:
+        abs_path = os.path.abspath(HTML_OUTPUT)
+        webbrowser.open('file://' + abs_path, new=2)
+    except Exception:
+        # Instrução de fallback se a abertura falhar
+        print(f"Não foi possível abrir o navegador automaticamente.") 
+
+    print(f"\n===================================================================================")
+    print(f"✅ Dashboard '{HTML_OUTPUT}' gerado com sucesso!")
+    print(f"Se a aba não abriu, procure o arquivo '{HTML_OUTPUT}' na mesma pasta e abra-o manualmente.")
+    print(f"===================================================================================\n")
+
+
+if __name__ == "__main__":
+    generate_tax_dashboard()
