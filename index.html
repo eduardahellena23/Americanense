@@ -4,22 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel de Análise Tributária — Americanense</title>
-  <!-- Tailwind -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Inter -->
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- SheetJS para ler .xlsx no browser -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style> body{font-family:'Inter',sans-serif;background:#f3f4f6;} </style>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+  </style>
 </head>
 <body class="p-6 md:p-12">
+  <!-- Container -->
   <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-6xl mx-auto">
+    <!-- Cabeçalho -->
     <header class="text-center mb-8">
-      <img id="logo" src="ICONE (LOGO NOVO).jpeg" alt="Logo" class="mx-auto h-12 mb-4 rounded-md">
+      <!-- Troque o caminho do logo abaixo, se quiser -->
+      <img id="logo" src="ICONE.jpg" alt="Logo" class="mx-auto h-12 mb-4 rounded-md" />
       <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Painel de Análise de Lucro Presumido</h1>
       <p class="text-gray-500 mt-2">Consultoria especializada individual, focada em soluções seguras e estratégicas para o seu negócio.</p>
       <section class="text-center my-6">
@@ -27,9 +30,10 @@
       </section>
     </header>
 
+    <!-- Cenários -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <!-- Cenário 1 -->
-      <div class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
+      <!-- Cards gerados por JS -->
+      <div id="scenario-1" class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Cenário 1</h2>
         <div class="flex flex-col gap-4 w-full">
           <div class="bg-indigo-100 p-4 rounded-lg shadow-sm">
@@ -41,15 +45,16 @@
             <p id="total-impostos-1" class="text-xl md:text-2xl font-bold text-red-900 mt-1">—</p>
           </div>
         </div>
-        <div class="w-full max-w-xs mt-6"><canvas id="tax-chart-1"></canvas></div>
+        <div class="w-full max-w-xs mt-6">
+          <canvas id="tax-chart-1"></canvas>
+        </div>
         <div id="tax-details-1" class="w-full mt-4 p-4 bg-white rounded-lg shadow-sm">
           <h3 class="text-sm font-bold text-gray-700 mb-2">Valores Detalhados</h3>
           <ul class="text-sm text-gray-600 space-y-1"></ul>
         </div>
       </div>
 
-      <!-- Cenário 2 -->
-      <div class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
+      <div id="scenario-2" class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Cenário 2</h2>
         <div class="flex flex-col gap-4 w-full">
           <div class="bg-indigo-100 p-4 rounded-lg shadow-sm">
@@ -61,15 +66,16 @@
             <p id="total-impostos-2" class="text-xl md:text-2xl font-bold text-red-900 mt-1">—</p>
           </div>
         </div>
-        <div class="w-full max-w-xs mt-6"><canvas id="tax-chart-2"></canvas></div>
+        <div class="w-full max-w-xs mt-6">
+          <canvas id="tax-chart-2"></canvas>
+        </div>
         <div id="tax-details-2" class="w-full mt-4 p-4 bg-white rounded-lg shadow-sm">
           <h3 class="text-sm font-bold text-gray-700 mb-2">Valores Detalhados</h3>
           <ul class="text-sm text-gray-600 space-y-1"></ul>
         </div>
       </div>
 
-      <!-- Cenário 3 -->
-      <div class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
+      <div id="scenario-3" class="flex flex-col items-center bg-gray-50 p-6 rounded-lg shadow-sm">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Cenário 3</h2>
         <div class="flex flex-col gap-4 w-full">
           <div class="bg-indigo-100 p-4 rounded-lg shadow-sm">
@@ -81,7 +87,9 @@
             <p id="total-impostos-3" class="text-xl md:text-2xl font-bold text-red-900 mt-1">—</p>
           </div>
         </div>
-        <div class="w-full max-w-xs mt-6"><canvas id="tax-chart-3"></canvas></div>
+        <div class="w-full max-w-xs mt-6">
+          <canvas id="tax-chart-3"></canvas>
+        </div>
         <div id="tax-details-3" class="w-full mt-4 p-4 bg-white rounded-lg shadow-sm">
           <h3 class="text-sm font-bold text-gray-700 mb-2">Valores Detalhados</h3>
           <ul class="text-sm text-gray-600 space-y-1"></ul>
@@ -91,109 +99,107 @@
   </div>
 
   <script>
-    // === CONFIG RÁPIDA ===
-    const COMPANY_NAME = "Recon Marketing LTDA";
-    const LOGO_SRC = "ICONE (LOGO NOVO).jpeg";
-    const XLSX_PATH = encodeURI("Comparativo - Americanense.xlsx"); // arquivo da raiz
+    // ======= CONFIGURAÇÕES RÁPIDAS =======
+    // Troque aqui as informações de topo
+    const COMPANY_NAME = "Recon Marketing LTDA"; // <— altere para o nome desejado
+    const LOGO_SRC = "ICONE (LOGO NOVO).jpeg";               // <— caminho do seu logo
 
-    // palavras que procuramos na 1ª coluna para mapear valores
-    const KEY_MAP = {
-      receita: ["receita mensal", "receita", "faturamento"],
-      PIS: ["pis"],
-      COFINS: ["cofins"],
-      IRPJ: ["irpj"],
-      "IRPJ (Adicional)": ["irpj (adicional)", "adicional irpj", "irpj adicional"],
-      CSLL: ["csll"],
-      "Pró-labore": ["pró-labore", "pro labore", "pro-labore"],
-      "Contribuição Anual 20%": ["contribuição anual 20%", "contribuicao anual 20%", "inss 20%", "contribuição patronal 20%"]
-    };
-
-    const brl = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(n)||0);
-    const sum = (a) => a.reduce((x,y)=>x+(Number(y)||0),0);
-    const normalize = (s) => String(s||"").normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
-
-    function toNumber(val){
-      if (typeof val === 'number') return val;
-      const s = String(val).replace(/\./g,'').replace(/,/g,'.');
-      const n = Number(s);
-      return isNaN(n) ? 0 : n;
+    // Cenários e valores (substitua pelos seus). Agora os totais são CALCULADOS do objeto de impostos.
+    const SCENARIOS = {
+  1: {
+    receita: 250049.12,
+    impostos: {
+      "SN – Anexo III": { valor: 14898.454386, aliquota: "11,1882%" },
+      "ISS FIXO (Mensal)": { valor: 144.7125, aliquota: "—" }
     }
-
-    async function loadWorkbook() {
-      const resp = await fetch(XLSX_PATH);
-      if (!resp.ok) throw new Error("Planilha não encontrada: " + XLSX_PATH);
-      const buf = await resp.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];               // primeira aba
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }); // matriz [linha][coluna]
-      return rows;
+  },
+  2: {
+    receita: 250049.12,
+    impostos: {
+      "SN – Anexo III (RTC DAS)": { valor: 42058.261984, aliquota: "16,82%" }
     }
+  },
+  3: {
+    receita: 250049.12,
+    impostos: {
+      "IRPJ": { valor: 12002.35776, aliquota: "4,8%" },
+      "IRPJ (Adicional)": { valor: 6001.58, aliquota: "10%" },
+      "CSLL": { valor: 7201.414656, aliquota: "2,88%" },
+      "CBS (PIS/COFINS)": { valor: 14877.92264, aliquota: "5,95%" },
+      "IBS (ICMS/ISS)": { valor: 32381.36104, aliquota: "12,95%" },
+      "IPI": { valor: 0, aliquota: "—" },
+      "CPP (Folha)": { valor: 33521.03025, aliquota: "28,5%" },
+      "Créditos IBS/CBS": { valor: -2562.8319, aliquota: "-" }
+    }
+  }
+};
 
-    function extractValues(rows){
-      let receita = 0;
-      const impostos = {};
-      for (const r of rows){
-        const label = normalize(r[0]);
-        const val = toNumber(r[1]);
-        if (!label) continue;
+    // ======= FUNÇÕES =======
+    const brl = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
+    const sum = (arr) => arr.reduce((a, b) => a + (Number(b) || 0), 0);
 
-        if (KEY_MAP.receita.some(k => label.includes(k))) receita = val;
+    function renderScenario(n) {
+  const s = SCENARIOS[n];
+  const receitaEl = document.getElementById(`receita-mensal-${n}`);
+  const totalEl = document.getElementById(`total-impostos-${n}`);
+  const list = document.querySelector(`#tax-details-${n} ul`);
+  list.innerHTML = "";
 
-        for (const key of Object.keys(KEY_MAP)){
-          if (key === "receita") continue;
-          if (KEY_MAP[key].some(k => label.includes(k))) impostos[key] = { valor: val, aliquota: "-" };
+  const labelsAll = Object.keys(s.impostos);
+  const valoresAll = labelsAll.map(k => Number(s.impostos[k].valor) || 0);
+
+  const totalImpostos = valoresAll.reduce((acc,v)=>acc+v,0); // inclui créditos negativos
+
+  // Para o gráfico: usamos apenas valores positivos
+  const labels = labelsAll.filter((k)=> (s.impostos[k].valor||0) > 0);
+  const valores = labels.map(k => s.impostos[k].valor);
+
+  receitaEl.textContent = brl(s.receita);
+  totalEl.textContent = brl(totalImpostos);
+
+  // Detalhes
+  labelsAll.forEach((k) => {
+    const it = s.impostos[k];
+    const li = document.createElement('li');
+    const sign = it.valor < 0 ? '-' : '';
+    li.innerHTML = `<strong>${k} (${it.aliquota || '—'}):</strong> ${sign}${brl(Math.abs(it.valor))}`;
+    list.appendChild(li);
+  });
+
+  // Gráfico
+  const ctx = document.getElementById(`tax-chart-${n}`).getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: valores,
+        backgroundColor: ['#4ade80','#3b82f6','#f43f5e','#fde047','#a78bfa','#34d399','#9ca3af'],
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
+        tooltip: {
+          callbacks: { label: (ctx) => `${ctx.label}: ${brl(ctx.parsed)}` },
+          bodyFont: { family: 'Inter' },
+          titleFont: { family: 'Inter' }
         }
       }
-      return { receita, impostos };
     }
+  });
+}
 
-    function renderScenario(n, data){
-      const receitaEl = document.getElementById(`receita-mensal-${n}`);
-      const totalEl   = document.getElementById(`total-impostos-${n}`);
-      const list      = document.querySelector(`#tax-details-${n} ul`);
-      list.innerHTML = "";
-
-      const labels  = Object.keys(data.impostos);
-      const valores = labels.map(k => data.impostos[k].valor);
-      const totalImpostos = sum(valores);
-
-      receitaEl.textContent = brl(data.receita);
-      totalEl.textContent   = brl(totalImpostos);
-
-      labels.forEach(k => {
-        const it = data.impostos[k];
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${k} (${it.aliquota || '-'}):</strong> ${brl(it.valor)}`;
-        list.appendChild(li);
-      });
-
-      const ctx = document.getElementById(`tax-chart-${n}`).getContext('2d');
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: valores, backgroundColor: ['#4ade80','#3b82f6','#f43f5e','#fde047','#a78bfa','#34d399','#9ca3af'], hoverOffset: 4 }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
-                   tooltip: { callbacks: { label: (c)=>`${c.label}: ${brl(c.parsed)}` }, bodyFont: { family: 'Inter' }, titleFont: { family: 'Inter' } } } }
-      });
-    }
-
-    window.addEventListener('load', async () => {
+    // ======= INICIALIZAÇÃO =======
+    window.addEventListener('load', () => {
+      // topo
       document.getElementById('company-name').textContent = COMPANY_NAME;
       document.getElementById('logo').src = LOGO_SRC;
 
-      try{
-        const rows = await loadWorkbook();
-        const base = extractValues(rows);
-        // usa a mesma base nos 3 cards (ajuste aqui se quiser variações por cenário)
-        renderScenario(1, base);
-        renderScenario(2, structuredClone(base));
-        renderScenario(3, structuredClone(base));
-      }catch(e){
-        console.error(e);
-        [1,2,3].forEach(n => {
-          document.getElementById(`receita-mensal-${n}`).textContent = 'Erro ao carregar planilha';
-          document.getElementById(`total-impostos-${n}`).textContent = '-';
-        });
-      }
+      // renderiza cenários
+      [1,2,3].forEach(renderScenario);
     });
   </script>
 </body>
