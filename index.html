@@ -12,9 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body{font-family:'Inter',sans-serif;background:#f3f4f6;}
-  </style>
+  <style>body{font-family:'Inter',sans-serif;background:#f3f4f6;}</style>
 </head>
 <body class="p-6 md:p-12">
   <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-7xl mx-auto">
@@ -110,35 +108,15 @@
         <canvas id="bar-total"></canvas>
       </div>
       <div class="bg-white rounded-xl shadow p-4">
-        <h3 class="text-lg font-semibold mb-2">Diferença vs. Cenário mais barato</h3>
+        <h3 class="text-lg font-semibold mb-2">Diferença vs. Cenário mais econômico</h3>
         <canvas id="bar-diff"></canvas>
       </div>
-
-      <h3 class="text-lg font-semibold">Composição por Cenário (Pizza)</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl shadow p-4">
-          <h4 class="font-medium mb-2">Simples Nacional – Atual</h4>
-          <canvas id="pie-sna"></canvas>
-        </div>
-        <div class="bg-white rounded-xl shadow p-4">
-          <h4 class="font-medium mb-2">Simples Nacional – RTC DAS</h4>
-          <canvas id="pie-sndas"></canvas>
-        </div>
-        <div class="bg-white rounded-xl shadow p-4">
-          <h4 class="font-medium mb-2">Simples Nacional – RTC Híbrido</h4>
-          <canvas id="pie-snh"></canvas>
-        </div>
-        <div class="bg-white rounded-xl shadow p-4">
-          <h4 class="font-medium mb-2">Lucro Presumido – RTC</h4>
-          <canvas id="pie-lp"></canvas>
-          <p class="text-xs text-gray-500 mt-2">Obs.: créditos IBS/CBS (R$ 2.562,83) não entram na pizza, mas entram no total.</p>
-        </div>
-      </div>
+      <!-- Seção de pizzas independentes removida -->
     </section>
   </div>
 
   <script>
-    // ===== Dados dos 4 cenários (salvos por você) =====
+    // ===== Dados com percentuais (aliquotas) incluídos =====
     const receitaMensal = 250049.12;
 
     const cenarios = {
@@ -146,41 +124,41 @@
         nome: "Simples Nacional – Atual",
         receita: receitaMensal,
         itens: {
-          "SN – Anexo III": 14898.45,
-          "ISS FIXO (Mensal)": 144.71,
-          "CPP": 0.00
+          "SN – Anexo III": { valor: 14898.45, aliquota: "11,19%" },
+          "ISS FIXO (Mensal)": { valor: 144.71, aliquota: "—" },
+          "CPP": { valor: 0.00, aliquota: "NA" }
         }
       },
       2: { // SN RTC DAS
         nome: "Simples Nacional – RTC DAS",
         receita: receitaMensal,
         itens: {
-          "SN – Anexo III (RTC DAS)": 42058.26,
-          "CPP": 0.00
+          "SN – Anexo III (RTC DAS)": { valor: 42058.26, aliquota: "16,82%" },
+          "CPP": { valor: 0.00, aliquota: "NA" }
         }
       },
       3: { // SN RTC Híbrido
         nome: "Simples Nacional – RTC Híbrido",
         receita: receitaMensal,
         itens: {
-          "SN – Anexo III": 21413.17,
-          "CBS (PIS/COFINS)": 14877.92,
-          "IBS (ICMS/ISS)": 32381.36,
-          "CPP": 0.00
+          "SN – Anexo III": { valor: 21413.17, aliquota: "8,56%" },
+          "CBS (PIS/COFINS)": { valor: 14877.92, aliquota: "5,95%" },
+          "IBS (ICMS/ISS)": { valor: 32381.36, aliquota: "12,95%" },
+          "CPP": { valor: 0.00, aliquota: "NA" }
         }
       },
       4: { // Lucro Presumido RTC
         nome: "Lucro Presumido – RTC",
         receita: receitaMensal,
         itens: {
-          "IRPJ": 12002.36,
-          "IRPJ (Adicional)": 6001.58,
-          "CSLL": 7201.41,
-          "CBS (PIS/COFINS)": 14877.92,
-          "IBS (ICMS/ISS)": 32381.36,
-          "IPI": 0,
-          "CPP (Folha)": 33521.03,
-          "Créditos IBS/CBS": -2562.83 // negativo (dedução)
+          "IRPJ": { valor: 12002.36, aliquota: "4,80%" },
+          "IRPJ (Adicional)": { valor: 6001.58, aliquota: "10,00%" },
+          "CSLL": { valor: 7201.41, aliquota: "2,88%" },
+          "CBS (PIS/COFINS)": { valor: 14877.92, aliquota: "5,95%" },
+          "IBS (ICMS/ISS)": { valor: 32381.36, aliquota: "12,95%" },
+          "IPI": { valor: 0, aliquota: "NA" },
+          "CPP (Folha)": { valor: 33521.03, aliquota: "28,50%" },
+          "Créditos IBS/CBS": { valor: -2562.83, aliquota: "27%" } // crédito (negativo)
         }
       }
     };
@@ -191,27 +169,28 @@
     function renderCard(n){
       const c = cenarios[n];
       const labels = Object.keys(c.itens);
-      const valores = labels.map(k => Number(c.itens[k])||0);
+      const valores = labels.map(k => Number(c.itens[k].valor)||0);
 
       // Total inclui negativos (créditos)
       const total = soma(valores);
       document.getElementById(`receita-mensal-${n}`).textContent = moedaBR(c.receita);
       document.getElementById(`total-impostos-${n}`).textContent = moedaBR(total);
 
-      // Lista de detalhes
+      // Lista de detalhes (com percentuais)
       const ul = document.querySelector(`#tax-details-${n} ul`);
       ul.innerHTML = "";
       labels.forEach(k => {
-        const v = c.itens[k];
+        const v = c.itens[k].valor;
+        const aliq = c.itens[k].aliquota || "—";
         const neg = v < 0 ? "-" : "";
         const li = document.createElement('li');
-        li.innerHTML = `<strong>${k}:</strong> ${neg}${moedaBR(Math.abs(v))}`;
+        li.innerHTML = `<strong>${k} (${aliq}):</strong> ${neg}${moedaBR(Math.abs(v))}`;
         ul.appendChild(li);
       });
 
-      // Pizza só com positivos
-      const posLabels = labels.filter(k => (c.itens[k]||0) > 0);
-      const posVals   = posLabels.map(k => c.itens[k]);
+      // Pizza do card (apenas positivos)
+      const posLabels = labels.filter(k => (c.itens[k].valor||0) > 0);
+      const posVals   = posLabels.map(k => c.itens[k].valor);
       new Chart(document.getElementById(`tax-chart-${n}`).getContext('2d'), {
         type: 'doughnut',
         data: { labels: posLabels, datasets: [{ data: posVals }] },
@@ -224,7 +203,7 @@
 
     // --- Barras: total por cenário ---
     const nomes = [cenarios[1].nome, cenarios[2].nome, cenarios[3].nome, cenarios[4].nome];
-    const totais = [1,2,3,4].map(n => soma(Object.values(cenarios[n].itens)));
+    const totais = [1,2,3,4].map(n => soma(Object.values(cenarios[n].itens).map(x=>x.valor)));
 
     new Chart(document.getElementById('bar-total').getContext('2d'), {
       type: 'bar',
@@ -239,13 +218,13 @@
       }
     });
 
-    // --- Barras: diferença vs. menor total ---
+    // --- Barras: diferença vs. cenário mais econômico ---
     const menor = Math.min(...totais);
     const diffs = totais.map(v => v - menor);
 
     new Chart(document.getElementById('bar-diff').getContext('2d'), {
       type: 'bar',
-      data: { labels: nomes, datasets: [{ label: 'Diferença vs. menor total', data: diffs }] },
+      data: { labels: nomes, datasets: [{ label: 'Diferença vs. cenário mais econômico', data: diffs }] },
       options: {
         responsive: true,
         plugins: {
@@ -255,22 +234,6 @@
         scales: { y: { ticks: { callback: (v)=> moedaBR(v) } } }
       }
     });
-
-    // --- Pizzas independentes (composição) ---
-    function pizza(el, comp){
-      const labs = Object.keys(comp).filter(k => (comp[k]||0) > 0);
-      const vals = labs.map(k => comp[k]);
-      new Chart(document.getElementById(el).getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: labs, datasets: [{ data: vals }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-      });
-    }
-    pizza('pie-sna',   cenarios[1].itens);
-    pizza('pie-sndas', cenarios[2].itens);
-    pizza('pie-snh',   cenarios[3].itens);
-    pizza('pie-lp',    cenarios[4].itens);
-
   </script>
 </body>
 </html>
