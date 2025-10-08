@@ -119,49 +119,53 @@
     // ===== Dados com percentuais (aliquotas) incluídos =====
     const receitaMensal = 250049.12;
 
-    const cenarios = {
-      1: { // SN Atual
-        nome: "Simples Nacional – Atual",
-        receita: receitaMensal,
-        itens: {
-          "SN – Anexo III": { valor: 14898.45, aliquota: "11,19%" },
-          "ISS FIXO (Mensal)": { valor: 144.71, aliquota: "—" },
-          "CPP": { valor: 0.00, aliquota: "NA" }
-        }
-      },
-      2: { // SN RTC DAS
-        nome: "Simples Nacional – RTC DAS",
-        receita: receitaMensal,
-        itens: {
-          "SN – Anexo III (RTC DAS)": { valor: 42058.26, aliquota: "16,82%" },
-          "CPP": { valor: 0.00, aliquota: "NA" }
-        }
-      },
-      3: { // SN RTC Híbrido
-        nome: "Simples Nacional – RTC Híbrido",
-        receita: receitaMensal,
-        itens: {
-          "SN – Anexo III": { valor: 21413.17, aliquota: "8,56%" },
-          "CBS (PIS/COFINS)": { valor: 14877.92, aliquota: "5,95%" },
-          "IBS (ICMS/ISS)": { valor: 32381.36, aliquota: "12,95%" },
-          "CPP": { valor: 0.00, aliquota: "NA" }
-        }
-      },
-      4: { // Lucro Presumido RTC
-        nome: "Lucro Presumido – RTC",
-        receita: receitaMensal,
-        itens: {
-          "IRPJ": { valor: 12002.36, aliquota: "4,80%" },
-          "IRPJ (Adicional)": { valor: 6001.58, aliquota: "10,00%" },
-          "CSLL": { valor: 7201.41, aliquota: "2,88%" },
-          "CBS (PIS/COFINS)": { valor: 14877.92, aliquota: "5,95%" },
-          "IBS (ICMS/ISS)": { valor: 32381.36, aliquota: "12,95%" },
-          "IPI": { valor: 0, aliquota: "NA" },
-          "CPP (Folha)": { valor: 33521.03, aliquota: "28,50%" },
-          "Créditos IBS/CBS": { valor: -2562.83, aliquota: "27%" } // crédito (negativo)
-        }
-      }
-    };
+    const receitaMensal = 250049.12;
+
+const cenarios = {
+  1: {
+    nome: "Simples Nacional – Atual",
+    receita: receitaMensal,
+    // se no seu código NÃO existir receita_caixa, pode apagar a linha abaixo
+    // receita_caixa: 133162.46,
+    itens: {
+      "SN – Anexo III": { valor: 14898.45, aliquota: "11,19%" },
+      "ISS FIXO (Mensal)": { valor: 144.71, aliquota: "—" },
+      "CPP": { valor: 0.00, aliquota: "NA" }
+    }
+  },
+  2: {
+    nome: "Simples Nacional – RT DAS",
+    receita: receitaMensal,
+    itens: {
+      "SN – Anexo III (RTC DAS)": { valor: 42058.26, aliquota: "16,82%" },
+      "CPP": { valor: 0.00, aliquota: "NA" }
+    }
+  },
+  3: {
+    nome: "Simples Nacional – RT Híbrido",
+    receita: receitaMensal,
+    itens: {
+      "SN – Anexo III": { valor: 21413.17, aliquota: "8,56%" },
+      "CBS (PIS/COFINS)": { valor: 15403.03, aliquota: "6,16%" },
+      "IBS (ICMS/ISS)": { valor: 30981.09, aliquota: "12,39%" },
+      "CPP": { valor: 0.00, aliquota: "NA" }
+    }
+  },
+  4: {
+    nome: "Lucro Presumido – RT",
+    receita: receitaMensal,
+    itens: {
+      "IRPJ": { valor: 12002.36, aliquota: "4,80%" },
+      "IRPJ (Adicional)": { valor: 6001.58, aliquota: "10,00%" },
+      "CSLL": { valor: 7201.41, aliquota: "2,88%" },
+      "CBS (PIS/COFINS)": { valor: 15403.03, aliquota: "6,16%" },
+      "IBS (ICMS/ISS)": { valor: 30981.09, aliquota: "12,39%" },
+      "IPI": { valor: 0.00, aliquota: "NA" },
+      "CPP (Folha)": { valor: 33521.03, aliquota: "28,50%" },
+      "Créditos IBS/CBS": { valor: -4152.89, aliquota: "26,5%" }
+    }
+  }
+};
 
     const moedaBR = (n)=> new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
     const soma = (arr)=> arr.reduce((a,b)=> a + (Number(b)||0), 0);
